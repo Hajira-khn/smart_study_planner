@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-head">Progress</h1>
+<p class="page-sub">See how each subject is tracking.</p>
+
+<div class="grid">
+  <div class="card">
+    <div class="stat-value">{{ overall }}%</div>
+    <div class="stat-label">Overall Progress</div>
+  </div>
+  <div class="card">
+    <div class="stat-value">{{ hours }}</div>
+    <div class="stat-label">Weekly Hours</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Per-Subject Breakdown</h3>
+  {% for s in subjects %}
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:10pt;">
+        <span>{{ s.name }}</span><span style="color:var(--text-sec)">{{ s.progress }}% &middot; {{ s.hours }} hrs/wk</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:{{ s.progress }}%"></div></div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

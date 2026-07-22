@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-head">Dashboard</h1>
+<p class="page-sub">Welcome back, {{ username }}.</p>
+
+<div class="grid">
+  <div class="card">
+    <div class="stat-value">{{ overall }}%</div>
+    <div class="stat-label">Overall Progress</div>
+  </div>
+  <div class="card">
+    <div class="stat-value">{{ hours }}</div>
+    <div class="stat-label">Weekly Hours Planned</div>
+  </div>
+  <div class="card">
+    <div class="stat-value">{{ subjects|length }}</div>
+    <div class="stat-label">Subjects</div>
+  </div>
+  <div class="card">
+    <div class="stat-value">{{ plan_count }}</div>
+    <div class="stat-label">Study Sessions</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Subjects</h3>
+  {% for s in subjects %}
+    <div style="margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; font-size:10pt;">
+        <span>{{ s.name }}</span><span style="color:var(--text-sec)">{{ s.progress }}%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:{{ s.progress }}%"></div></div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h3>Recent Study Sessions</h3>
+  {% if recent_plans %}
+  <table>
+    <tr><th>Date</th><th>Subject</th><th>Duration</th><th>Priority</th></tr>
+    {% for p in recent_plans %}
+      <tr>
+        <td>{{ p[0] }}</td><td>{{ p[1] }}</td><td>{{ p[2] }}</td>
+        <td><span class="badge badge-{{ p[3] }}">{{ p[3] }}</span></td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p style="color:var(--text-sec)">No study sessions planned yet. Head to Study Planner to add one.</p>
+  {% endif %}
+</div>
+{% endblock %}

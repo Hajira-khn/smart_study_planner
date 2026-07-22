@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-head">Study Planner</h1>
+<p class="page-sub">Schedule your study sessions.</p>
+
+{% if message %}<div class="message">{{ message }}</div>{% endif %}
+
+<div class="card">
+  <h3>Add a Study Session</h3>
+  <form method="POST">
+    <input type="hidden" name="action" value="add">
+    <label for="date">Date</label>
+    <input type="date" id="date" name="date">
+
+    <label for="subject">Subject</label>
+    <select id="subject" name="subject">
+      {% for s in subjects_list %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    </select>
+
+    <label for="duration">Duration</label>
+    <select id="duration" name="duration">
+      {% for d in durations %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+    </select>
+
+    <label for="priority">Priority</label>
+    <select id="priority" name="priority">
+      {% for p in priorities %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+    </select>
+
+    <label for="notes">Notes (optional)</label>
+    <input type="text" id="notes" name="notes" placeholder="e.g. Review chapter 4">
+
+    <button type="submit">Add session</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Filter by priority</h3>
+  <form method="GET" style="display:flex; gap:10px; align-items:flex-end;">
+    <div style="flex:1;">
+      <label for="priority_f">Priority</label>
+      <select id="priority_f" name="priority">
+        <option value="">All</option>
+        {% for p in priorities %}
+          <option value="{{ p }}" {{ 'selected' if priority_filter == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">Apply</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Your Sessions</h3>
+  {% if shown_plans %}
+  <table>
+    <tr><th>Date</th><th>Subject</th><th>Duration</th><th>Priority</th><th>Notes</th><th></th></tr>
+    {% for idx, p in shown_plans %}
+      <tr>
+        <td>{{ p[0] }}</td><td>{{ p[1] }}</td><td>{{ p[2] }}</td>
+        <td><span class="badge badge-{{ p[3] }}">{{ p[3] }}</span></td>
+        <td>{{ p[4] }}</td>
+        <td>
+          <form method="POST" class="inline">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="index" value="{{ idx }}">
+            <button type="submit" class="btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p style="color:var(--text-sec)">No sessions match.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-head">Subjects</h1>
+<p class="page-sub">Manage the subjects you're tracking.</p>
+
+{% if message %}<div class="message">{{ message }}</div>{% endif %}
+
+<div class="card">
+  <h3>Add a Subject</h3>
+  <form method="POST">
+    <input type="hidden" name="action" value="add">
+    <label for="name">Subject name</label>
+    <input type="text" id="name" name="name" placeholder="e.g. Data Structures">
+    <label for="hours">Weekly hours (1-40)</label>
+    <input type="number" id="hours" name="hours" value="4" min="1" max="40">
+    <button type="submit">Add subject</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Search</h3>
+  <form method="GET">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search subjects...">
+    <button type="submit">Search</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Your Subjects</h3>
+  {% for s in subjects %}
+    <div style="border-bottom:1px solid var(--border); padding:14px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>{{ s.name }}</strong>
+          <div style="color:var(--text-sec); font-size:9.5pt;">{{ s.hours }} hrs/week</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <form method="POST" class="inline">
+            <input type="hidden" name="action" value="progress">
+            <input type="hidden" name="name" value="{{ s.name }}">
+            <input type="number" name="progress" value="{{ s.progress }}" min="0" max="100" style="width:70px;">
+            <button type="submit" class="btn-ghost">Update %</button>
+          </form>
+          <form method="POST" class="inline">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="name" value="{{ s.name }}">
+            <button type="submit" class="btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:{{ s.progress }}%"></div></div>
+    </div>
+  {% else %}
+    <p style="color:var(--text-sec)">No subjects found.</p>
+  {% endfor %}
+</div>
+{% endblock %}

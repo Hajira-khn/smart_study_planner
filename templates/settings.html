@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-head">Settings</h1>
+<p class="page-sub">Account</p>
+
+<div class="card">
+  <h3>Signed in as</h3>
+  <p style="color:var(--text-sec)">{{ username }}</p>
+  <a class="btn btn-danger" href="{{ url_for('logout') }}">Log out</a>
+</div>
+
+<div class="card">
+  <h3>Data</h3>
+  <p style="color:var(--text-sec); font-size:9.5pt;">
+    Your subjects and study sessions are stored in your browser session for this demo —
+    they reset when you log out or your session expires.
+  </p>
+</div>
+{% endblock %}
