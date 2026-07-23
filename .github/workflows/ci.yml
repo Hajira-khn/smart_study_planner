@@ -122,7 +122,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           python -m pytest tests/ \
-            --cov=. \
+            --cov=logic \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=75
