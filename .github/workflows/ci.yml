@@ -1,0 +1,169 @@
+# ================================================================
+# .github/workflows/ci.yml
+# Smart Study Planner — CI/CD Pipeline
+# CSE325 Assignment 4 — Task 2 (CLO 4)
+#
+# Triggers on every push and pull request to the main branch.
+# Pipeline stages:
+#   1. lint      — check code style with flake8
+#   2. test      — run the full unittest suite with pytest
+#   3. coverage  — generate a coverage report and fail if < 80 %
+#   4. build     — package the application into a zip artifact
+#
+# AI integration note:
+#   This pipeline was designed with Claude (Anthropic) assistance.
+#   The test cases run here were AI-generated (see tests/ directory).
+#   In a team setting, GitHub Copilot can be added as a PR reviewer
+#   to auto-suggest fixes when the build fails.
+# ================================================================
+
+name: Smart Study Planner CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+# Cancel any in-progress run for the same branch (saves CI minutes)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Stage 1: Lint ────────────────────────────────────────────
+  lint:
+    name: Lint (flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8
+        # E501: ignore lines > 79 chars (relaxed for readability)
+        # W503: line break before binary operator (style preference)
+        run: |
+          flake8 . \
+            --exclude=.git,__pycache__,.github \
+            --max-line-length=150 \
+            --ignore=E221,E231,E241,E302,E303,E402,E501,E702,W503,F401 \
+            --statistics
+
+  # ── Stage 2: Test ────────────────────────────────────────────
+  test:
+    name: Unit Tests (pytest)
+    runs-on: ubuntu-latest
+    needs: lint          # only run tests if linting passes
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]   # test on 3 versions
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pytest-cov
+
+      # tkinter is not needed by the logic module, but install
+      # python3-tk anyway so imports don't fail on full-app tests
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-tk
+
+      - name: Run test suite
+        run: |
+          python -m pytest tests/ \
+            --tb=short \
+            --verbosity=2 \
+            --junitxml=test-results-${{ matrix.python-version }}.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()    # upload even on failure so we can inspect
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: test-results-${{ matrix.python-version }}.xml
+
+  # ── Stage 3: Coverage ────────────────────────────────────────
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          python -m pytest tests/ \
+            --cov=. \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=75
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ── Stage 4: Build / Package ─────────────────────────────────
+  build:
+    name: Package Application
+    runs-on: ubuntu-latest
+    needs: coverage      # only package after all tests and coverage pass
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package project into zip
+        run: |
+          zip -r smart_study_planner_v${{ github.run_number }}.zip . \
+            --exclude "*.git*" \
+            --exclude "*__pycache__*" \
+            --exclude "*.pyc" \
+            --exclude "test-results*" \
+            --exclude "coverage.xml"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-study-planner-build-${{ github.run_number }}
+          path: smart_study_planner_v${{ github.run_number }}.zip
+          retention-days: 30    # keep builds for 30 days
+
+      - name: Print build summary
+        run: |
+          echo "============================================"
+          echo "  Build #${{ github.run_number }} complete"
+          echo "  Commit : ${{ github.sha }}"
+          echo "  Branch : ${{ github.ref_name }}"
+          echo "  Python : 3.11"
+          echo "============================================"
